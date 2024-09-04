@@ -9,8 +9,7 @@ void BitsyGame::parseSettings(const std::string& line) {
     std::stringstream ss(line);
     std::string key;
     int value;
-    ss >> key >> value;
-    key = key.substr(1); // Remove the '!' from the key
+    ss >> key >> key >> value;
 
     if (key == "VER_MAJ") settings.verMaj = value;
     else if (key == "VER_MIN") settings.verMin = value;
@@ -47,6 +46,7 @@ void BitsyGame::parseRoom(std::istream& file, const std::string& firstLine) {
     Room room;
     room.id = std::stoi(firstLine.substr(5)); // Extract the room ID
 
+    // Parse 16x16 tiles grid
     for (int i = 0; i < 16; ++i) {
         std::string line;
         std::getline(file, line);
@@ -60,25 +60,62 @@ void BitsyGame::parseRoom(std::istream& file, const std::string& firstLine) {
     }
 
     std::string line;
-    while (std::getline(file, line) && line.find("NAME") == std::string::npos) {
-        if (line.find("ITM") != std::string::npos) {
+    while (std::getline(file, line)) {
+        // Handle "NAME" (room name)
+        if (line.find("NAME") != std::string::npos) {
+            if (line.length() > 5) {
+                room.name = line.substr(5); // Extract the room name after "NAME "
+                
+                // Trim leading/trailing whitespace
+                room.name.erase(room.name.find_last_not_of(" \n\r\t") + 1);
+            } else {
+                std::cerr << "Error: Invalid NAME line in room definition." << std::endl;
+            }
+            break; // Exit the loop after finding the room name
+        }
+
+        // Parse items
+        else if (line.find("ITM") != std::string::npos) {
             int itemId, x, y;
             sscanf(line.c_str(), "ITM %d %d,%d", &itemId, &x, &y);
             room.items.emplace_back(itemId, std::make_pair(x, y));
-        } else if (line.find("END") != std::string::npos) {
-            int endId, x, y;
-            sscanf(line.c_str(), "END %d %d,%d", &endId, &x, &y);
-            room.end = std::make_pair(endId, std::make_pair(x, y));
-        } else if (line.find("PAL") != std::string::npos) {
+        }
+
+        // Parse exits
+        else if (line.find("EXT") != std::string::npos) {
+            Exit ext;
+            char effect[64] = {0}; // Buffer to store the effect
+            sscanf(line.c_str(), "EXT %d,%d %d %d,%d FX %s DLG %d",
+                   &ext.startPosition.first, &ext.startPosition.second,
+                   &ext.destinationRoomId,
+                   &ext.destinationPosition.first, &ext.destinationPosition.second,
+                   effect, &ext.dialogueId);
+            ext.effect = effect;
+            room.exits.push_back(ext);
+        }
+
+        // Parse endings
+        else if (line.find("END") != std::string::npos) {
+            End end;
+            sscanf(line.c_str(), "END %d %d,%d", &end.dialogueId, &end.position.first, &end.position.second);
+            room.endings.push_back(end);
+        }
+
+        // Parse palette
+        else if (line.find("PAL") != std::string::npos) {
             room.paletteId = std::stoi(line.substr(4));
-        } else if (line.find("TUNE") != std::string::npos) {
+        }
+
+        // Parse tune
+        else if (line.find("TUNE") != std::string::npos) {
             room.tuneId = std::stoi(line.substr(5));
         }
     }
 
-    room.name = line.substr(5);
-    rooms.push_back(room);
+    rooms.push_back(room); // Add room to the rooms vector
 }
+
+
 
 void BitsyGame::parseTile(std::istream& file, const std::string& firstLine) {
     Tile tile;

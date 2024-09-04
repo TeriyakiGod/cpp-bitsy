@@ -1,4 +1,3 @@
-// include/BitsyGame.h
 #ifndef BITSY_GAME_H
 #define BITSY_GAME_H
 
@@ -28,13 +27,26 @@ struct Palette {
     std::string name;
 };
 
-// Room structure
+struct Exit {
+    std::pair<int, int> startPosition; // (x, y)
+    int destinationRoomId;
+    std::pair<int, int> destinationPosition; // (x, y) in the destination room
+    std::string effect;
+    int dialogueId;
+};
+
+struct End {
+    int dialogueId;
+    std::pair<int, int> position; // (x, y)
+};
+
 struct Room {
     int id;
     std::vector<std::vector<char>> tiles;
     std::string name;
     std::vector<std::pair<int, std::pair<int, int>>> items;
-    std::pair<int, std::pair<int, int>> end;
+    std::vector<Exit> exits; // Store exits
+    std::vector<End> endings; // Store endings
     int paletteId;
     int tuneId;
 };
