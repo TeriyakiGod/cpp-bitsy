@@ -63,15 +63,7 @@ void BitsyGame::parseRoom(std::istream& file, const std::string& firstLine) {
     while (std::getline(file, line)) {
         // Handle "NAME" (room name)
         if (line.find("NAME") != std::string::npos) {
-            if (line.length() > 5) {
-                room.name = line.substr(5); // Extract the room name after "NAME "
-                
-                // Trim leading/trailing whitespace
-                room.name.erase(room.name.find_last_not_of(" \n\r\t") + 1);
-            } else {
-                std::cerr << "Error: Invalid NAME line in room definition." << std::endl;
-            }
-            break; // Exit the loop after finding the room name
+            room.name = line.substr(5); // Extract the room name after "NAME "
         }
 
         // Parse items
@@ -115,8 +107,6 @@ void BitsyGame::parseRoom(std::istream& file, const std::string& firstLine) {
     rooms.push_back(room); // Add room to the rooms vector
 }
 
-
-
 void BitsyGame::parseTile(std::istream& file, const std::string& firstLine) {
     Tile tile;
     tile.id = firstLine[4];
@@ -133,16 +123,21 @@ void BitsyGame::parseTile(std::istream& file, const std::string& firstLine) {
             std::getline(file, line);
             tile.frames.push_back(line);
         }
+        std::getline(file, line);   
+        if (line.find("NAME") != std::string::npos) {
+        tile.name = line.substr(5);
+        }
     }
-
-    std::getline(file, line);
-    if (line.find("NAME") != std::string::npos) {
+    else if (line.find("NAME") != std::string::npos) {
         tile.name = line.substr(5);
     }
 
     std::getline(file, line);
     if (line.find("WAL") != std::string::npos) {
         tile.wall = true;
+    }
+    else {
+        tile.wall = false;
     }
 
     tiles.push_back(tile);

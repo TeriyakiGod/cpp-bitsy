@@ -91,6 +91,17 @@ void test_parse_room() {
         "0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\n"
         "0,a,a,a,a,a,a,a,a,a,a,a,a,a,a,0\n"
         "0,a,0,0,0,0,0,0,0,0,0,0,0,0,a,0\n"
+        "0,a,0,0,0,0,0,0,0,0,0,0,0,0,a,0\n"
+        "0,a,0,0,0,0,0,0,0,0,0,0,0,0,a,0\n"
+        "0,a,0,0,0,0,0,0,0,0,0,0,0,0,a,0\n"
+        "0,a,0,0,0,0,0,0,0,0,0,0,0,0,a,0\n"
+        "0,a,0,0,0,0,0,0,0,0,0,0,0,0,a,0\n"
+        "0,a,0,0,0,0,0,0,0,0,0,0,0,0,a,0\n"
+        "0,a,0,0,0,0,0,0,0,0,0,0,0,0,a,0\n"
+        "0,a,0,0,0,0,0,0,0,0,0,0,0,0,a,0\n"
+        "0,a,0,0,0,0,0,0,0,0,0,0,0,0,a,0\n"
+        "0,a,0,0,0,0,0,0,0,0,0,0,0,0,a,0\n"
+        "0,a,0,0,0,0,0,0,0,0,0,0,0,0,a,0\n"
         "0,a,a,a,a,a,a,a,a,a,a,a,a,a,a,0\n"
         "0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\n"
         "NAME example room\n"
@@ -112,7 +123,6 @@ void test_parse_room() {
     // Test room details
     Room &room = game.rooms[0];
     assert(room.id == 0);
-    std::cout << room.name << std::endl;
     assert(room.name == "example room");
 
     // Test items
@@ -144,12 +154,119 @@ void test_parse_room() {
     std::cout << "test_parse_room passed!" << std::endl;
 }
 
+void test_parse_tile_single_frame() {
+    BitsyGame game;
+
+    // Simulate the input for a tile with a single frame
+    std::istringstream input(
+        "TIL a\n"
+        "11111111\n"
+        "10000001\n"
+        "10000001\n"
+        "10011001\n"
+        "10011001\n"
+        "10000001\n"
+        "10000001\n"
+        "11111111\n"
+        "NAME block\n"
+        "WAL true\n"
+    );
+
+    std::string firstLine;
+    std::getline(input, firstLine);
+
+    // Call the parseTile method
+    game.parseTile(input, firstLine);
+
+    // Test the result
+    assert(game.tiles.size() == 1);
+    Tile &tile = game.tiles[0];
+
+    // Test the tile ID
+    assert(tile.id == 'a');
+
+    // Test the first frame (8 lines)
+    assert(tile.frames.size() == 8);  // 8 lines, 1 frame
+    assert(tile.frames[0] == "11111111");
+    assert(tile.frames[1] == "10000001");
+    assert(tile.frames[7] == "11111111");
+
+    // Test the tile name
+    assert(tile.name == "block");
+
+    // Test the wall property
+    assert(tile.wall == true);
+
+    std::cout << "test_parse_tile_single_frame passed!" << std::endl;
+}
+
+void test_parse_tile_two_frames() {
+    BitsyGame game;
+
+    // Simulate the input for a tile with two frames
+    std::istringstream input(
+        "TIL b\n"
+        "11111111\n"
+        "10000001\n"
+        "10000001\n"
+        "10011001\n"
+        "10011001\n"
+        "10000001\n"
+        "10000001\n"
+        "11111111\n"
+        ">\n"
+        "11111111\n"
+        "10000001\n"
+        "10000001\n"
+        "10011001\n"
+        "10011001\n"
+        "10000001\n"
+        "10000001\n"
+        "11111111\n"
+        "NAME stone\n"
+    );
+
+    std::string firstLine;
+    std::getline(input, firstLine);
+
+    // Call the parseTile method
+    game.parseTile(input, firstLine);
+
+    // Test the result
+    assert(game.tiles.size() == 1);
+    Tile &tile = game.tiles[0];
+
+    // Test the tile ID
+    assert(tile.id == 'b');
+
+    // Test the first frame (8 lines)
+    assert(tile.frames.size() == 16);  // 16 lines, 2 frames
+    assert(tile.frames[0] == "11111111");
+    assert(tile.frames[1] == "10000001");
+    assert(tile.frames[7] == "11111111");
+
+    // Test the second frame (8 lines starting after '>')
+    assert(tile.frames[8] == "11111111");
+    assert(tile.frames[9] == "10000001");
+    assert(tile.frames[15] == "11111111");
+
+    // Test the tile name
+    assert(tile.name == "stone");
+
+    // Since there is no "WAL", the tile should not be a wall
+    assert(tile.wall == false);
+
+    std::cout << "test_parse_tile_two_frames passed!" << std::endl;
+}
+
 int main() {
     test_parse_game_title();
     test_parse_settings();
     test_parse_palette();
     test_parse_room();
-
+    test_parse_tile_single_frame();
+    test_parse_tile_two_frames();
+    
     std::cout << "All tests passed!" << std::endl;
     return 0;
 }
