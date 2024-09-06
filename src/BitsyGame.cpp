@@ -123,12 +123,13 @@ void BitsyGame::parseTile(std::istream& file, const std::string& firstLine) {
             std::getline(file, line);
             tile.frames.push_back(line);
         }
-        std::getline(file, line);   
-        if (line.find("NAME") != std::string::npos) {
-        tile.name = line.substr(5);
-        }
     }
-    else if (line.find("NAME") != std::string::npos) {
+    else {
+        file.seekg(-line.size() - 1, std::ios_base::cur);
+    }
+
+    std::getline(file, line);   
+        if (line.find("NAME") != std::string::npos) {
         tile.name = line.substr(5);
     }
 
@@ -145,13 +146,16 @@ void BitsyGame::parseTile(std::istream& file, const std::string& firstLine) {
 
 void BitsyGame::parseAvatar(std::istream& file, const std::string& firstLine) {
     Avatar avatar;
+    avatar.id = 'A'; // Avatar always has the ID 'A'
     std::string line;
 
+    // Parse the first frame (8 lines)
     for (int i = 0; i < 8; ++i) {
         std::getline(file, line);
         avatar.frames.push_back(line);
     }
 
+    // Check for a second frame
     std::getline(file, line);
     if (line.find(">") != std::string::npos) {
         for (int i = 0; i < 8; ++i) {
@@ -159,29 +163,36 @@ void BitsyGame::parseAvatar(std::istream& file, const std::string& firstLine) {
             avatar.frames.push_back(line);
         }
     }
-
-    while (std::getline(file, line) && line.find("POS") == std::string::npos) {
-        if (line.find("ITM") != std::string::npos) {
-            int itemId, count;
-            sscanf(line.c_str(), "ITM %d %d", &itemId, &count);
-            avatar.inventory.push_back(itemId);
-        }
+    else { // Go back one line if there is no second frame
+        file.seekg(-line.size() - 1, std::ios_base::cur);
     }
+    
+    std::getline(file, line);
+        if (line.find("POS") != std::string::npos) {
+            sscanf(line.c_str(), "POS %d %d,%d", &avatar.roomId, &avatar.position.first, &avatar.position.second);
+        }
 
-    sscanf(line.c_str(), "POS %d %d,%d", &avatar.position.first, &avatar.position.second.first, &avatar.position.second.second);
+    // Parse the inventory
+    while (std::getline(file, line) && line.find("ITM") != std::string::npos) {
+        int itemId;
+        sscanf(line.c_str(), "ITM %d", &itemId);
+        avatar.inventory.push_back(itemId);
+    }
     this->avatar = avatar;
 }
 
 void BitsyGame::parseSprite(std::istream& file, const std::string& firstLine) {
     Sprite sprite;
-    sprite.id = firstLine[4];
+    sprite.id = firstLine[4]; // Extract the sprite ID (e.g., 'a' from "SPR a")
     std::string line;
 
+    // Parse the first frame (8 lines)
     for (int i = 0; i < 8; ++i) {
         std::getline(file, line);
         sprite.frames.push_back(line);
     }
 
+    // Check for a second frame
     std::getline(file, line);
     if (line.find(">") != std::string::npos) {
         for (int i = 0; i < 8; ++i) {
@@ -189,45 +200,62 @@ void BitsyGame::parseSprite(std::istream& file, const std::string& firstLine) {
             sprite.frames.push_back(line);
         }
     }
-
-    while (std::getline(file, line) && line.find("POS") == std::string::npos) {
-        if (line.find("DLG") != std::string::npos) {
-            sscanf(line.c_str(), "DLG %d", &sprite.dialogId);
+    else { // Go back one line if there is no second frame
+        file.seekg(-line.size() - 1, std::ios_base::cur);
+    }
+    // Parse additional fields: name, dialogue ID, blip ID
+    while (!line.empty()) {
+        if (line.find("NAME") != std::string::npos) {
+            sprite.name = line.substr(5); // Extract sprite name
+        } else if (line.find("DLG") != std::string::npos) {
+            sprite.dialogId = std::stoi(line.substr(4)); // Extract dialogue ID
         } else if (line.find("BLIP") != std::string::npos) {
-            sscanf(line.c_str(), "BLIP %d", &sprite.blipId);
+            sprite.blipId = std::stoi(line.substr(5)); // Extract blip sound ID
+        } else if (line.find("POS") != std::string::npos) {
+            sscanf(line.c_str(), "POS %d %d,%d", &sprite.roomId, &sprite.position.first, &sprite.position.second);
         }
+        if (!std::getline(file, line)) break; // Move to the next line
     }
 
-    sscanf(line.c_str(), "POS %d %d,%d", &sprite.position.first, &sprite.position.second.first, &sprite.position.second.second);
-    sprites.push_back(sprite);
+    sprites.push_back(sprite); // Add the sprite to the sprites list
 }
 
 void BitsyGame::parseItem(std::istream& file, const std::string& firstLine) {
     Item item;
-    item.id = std::stoi(firstLine.substr(4));
+    item.id = std::stoi(firstLine.substr(4)); // Extract the item ID
     std::string line;
 
+    // Parse the first frame (8 lines)
     for (int i = 0; i < 8; ++i) {
         std::getline(file, line);
         item.frames.push_back(line);
     }
 
+    // Check for a second frame
     std::getline(file, line);
-    if (line.find("NAME") != std::string::npos) {
-        item.name = line.substr(5);
+    if (line.find(">") != std::string::npos) {
+        for (int i = 0; i < 8; ++i) {
+            std::getline(file, line);
+            item.frames.push_back(line);
+        }
+    }
+    else { // Go back one line if there is no second frame
+        file.seekg(-line.size() - 1, std::ios_base::cur);
     }
 
-    std::getline(file, line);
-    if (line.find("DLG") != std::string::npos) {
-        sscanf(line.c_str(), "DLG %d", &item.dialogId);
+    // Parse additional fields: name, dialogue ID, blip ID
+    while (!line.empty()) {
+        if (line.find("NAME") != std::string::npos) {
+            item.name = line.substr(5); // Extract item name
+        } else if (line.find("DLG") != std::string::npos) {
+            item.dialogId = std::stoi(line.substr(4)); // Extract dialogue ID
+        } else if (line.find("BLIP") != std::string::npos) {
+            item.blipId = std::stoi(line.substr(5)); // Extract blip sound ID
+        }
+        if (!std::getline(file, line)) break; // Move to the next line
     }
 
-    std::getline(file, line);
-    if (line.find("BLIP") != std::string::npos) {
-        sscanf(line.c_str(), "BLIP %d", &item.blipId);
-    }
-
-    items.push_back(item);
+    items.push_back(item); // Add the item to the list of items
 }
 
 void BitsyGame::parseDialogue(std::istream& file, const std::string& firstLine) {
@@ -242,87 +270,138 @@ void BitsyGame::parseDialogue(std::istream& file, const std::string& firstLine) 
     dialogues.push_back(dlg);
 }
 
+void BitsyGame::parseVariable(std::istream& file, const std::string& firstLine) {
+    Variable var;
+    var.name = firstLine.substr(4); // Extract the variable name (after "VAR ")
+    
+    // Get the variable value from the next line
+    std::string line;
+    std::getline(file, line);
+    var.value = line;  // Value can be any string, not necessarily a number
+    
+    variables[var.name] = var;  // Add the variable to the map
+}
+
 void BitsyGame::parseTune(std::istream& file, const std::string& firstLine) {
     Tune tune;
-    tune.id = std::stoi(firstLine.substr(5));
+    tune.id = std::stoi(firstLine.substr(5)); // Extract the tune ID
     std::string line;
 
-    while (std::getline(file, line) && line.find(">") == std::string::npos) {
-        tune.patterns.push_back(line);
+    bool isTreble = true;
+    while (std::getline(file, line)) {
+        if (line.find(">") != std::string::npos) {
+            isTreble = true; // After ">", expect treble first in the next bar
+        } else if (line.find("NAME") != std::string::npos) {
+            tune.name = line.substr(5); // Extract tune name
+        } else if (line.find("KEY") != std::string::npos) {
+            tune.key = line.substr(4); // Extract key
+        } else if (line.find("TMP") != std::string::npos) {
+            tune.tempo = line.substr(4); // Extract tempo
+        } else if (line.find("SQR") != std::string::npos) {
+            std::stringstream ss(line.substr(4));
+            ss >> tune.trebleInstrument >> tune.bassInstrument; // Parse instruments
+        } else if (line.find("ARP") != std::string::npos) {
+            tune.arpeggio = line.substr(4); // Extract arpeggio
+        } else {
+            // Alternate between treble and bass for each bar
+            if (isTreble) {
+                tune.treblePatterns.push_back(line);
+            } else {
+                tune.bassPatterns.push_back(line);
+            }
+            isTreble = !isTreble; // Switch to bass after treble, and vice versa
+        }
     }
 
-    while (std::getline(file, line) && line.find("NAME") == std::string::npos) {
-        // Continue parsing until NAME is found
-    }
-
-    if (line.find("NAME") != std::string::npos) {
-        tune.name = line.substr(5);
-    }
-    tunes.push_back(tune);
+    tunes.push_back(tune); // Add the parsed tune to the tunes list
 }
 
 void BitsyGame::parseBlip(std::istream& file, const std::string& firstLine) {
     Blip blip;
-    blip.id = std::stoi(firstLine.substr(5));
-    std::getline(file, blip.notes);
+    blip.id = std::stoi(firstLine.substr(5)); // Extract the blip ID
     std::string line;
 
-    while (std::getline(file, line) && line.find("NAME") == std::string::npos) {
-        // Parse until NAME is found
-    }
-
-    if (line.find("NAME") != std::string::npos) {
-        blip.name = line.substr(5);
-    }
-    blips.push_back(blip);
-}
-
-void BitsyGame::parseVariable(std::istream& file, const std::string& firstLine) {
-    Variable var;
-    var.name = firstLine.substr(4);
-    std::string line;
+    // Parse blip notes
     std::getline(file, line);
-    var.value = std::stoi(line);
-    variables[var.name] = var;
+    blip.notes = line; // Store the notes
+
+    // Parse additional fields
+    while (std::getline(file, line)) {
+        if (line.find("NAME") != std::string::npos) {
+            blip.name = line.substr(5); // Extract blip name
+        } else if (line.find("ENV") != std::string::npos) {
+            std::stringstream ss(line.substr(4));
+            int envVal;
+            while (ss >> envVal) {
+                blip.env.push_back(envVal); // Store envelope values
+            }
+        } else if (line.find("BEAT") != std::string::npos) {
+            std::stringstream ss(line.substr(5));
+            int beatVal;
+            while (ss >> beatVal) {
+                blip.beat.push_back(beatVal); // Store beat values
+            }
+        } else if (line.find("SQR") != std::string::npos) {
+            blip.squareWave = line.substr(4); // Store square wave setting
+        } else if (line.find("RPT") != std::string::npos) {
+            blip.repeat = std::stoi(line.substr(4)); // Store repeat value
+        }
+    }
+
+    blips.push_back(blip); // Add the parsed blip to the blips list
 }
 
 void BitsyGame::parseGameData(const std::string& filePath) {
     std::ifstream file(filePath);
+    
+    if (!file.is_open()) {
+        std::cerr << "Error: Unable to open file " << filePath << std::endl;
+        return; // Stop if the file can't be opened
+    }
+
     std::string line;
 
-    // Parse the first line as the game title
-    if (std::getline(file, line)) {
-        parseGameTitle(line);
-    }
-
-    // Continue parsing the rest of the file
-    while (std::getline(file, line)) {
-        std::stringstream ss(line);
-        std::string token;
-        ss >> token;
-
-        if (token == "!") {
-            parseSettings(line);
-        } else if (token == "PAL") {
-            parsePalette(file, line);
-        } else if (token == "ROOM") {
-            parseRoom(file, line);
-        } else if (token == "TIL") {
-            parseTile(file, line);
-        } else if (token == "SPR" && line.find("A") != std::string::npos) {
-            parseAvatar(file, line); // Parse avatar separately
-        } else if (token == "SPR") {
-            parseSprite(file, line); // Parse other sprites
-        } else if (token == "ITM") {
-            parseItem(file, line);
-        } else if (token == "DLG") {
-            parseDialogue(file, line);
-        } else if (token == "TUNE") {
-            parseTune(file, line);
-        } else if (token == "BLIP") {
-            parseBlip(file, line);
-        } else if (token == "VAR") {
-            parseVariable(file, line);
+    try {
+        // Parse the first line as the game title
+        if (std::getline(file, line)) {
+            parseGameTitle(line);
         }
+
+        // Continue parsing the rest of the file
+        while (std::getline(file, line)) {
+            std::stringstream ss(line);
+            std::string token;
+            ss >> token;
+
+            if (token == "!") {
+                parseSettings(line);
+            } else if (token == "PAL") {
+                parsePalette(file, line);
+            } else if (token == "ROOM") {
+                parseRoom(file, line);
+            } else if (token == "TIL") {
+                parseTile(file, line);
+            } else if (token == "SPR" && line.find("A") != std::string::npos) {
+                parseAvatar(file, line); // Parse avatar separately
+            } else if (token == "SPR") {
+                parseSprite(file, line); // Parse other sprites
+            } else if (token == "ITM") {
+                parseItem(file, line);
+            } else if (token == "DLG") {
+                parseDialogue(file, line);
+            } else if (token == "TUNE") {
+                parseTune(file, line);
+            } else if (token == "BLIP") {
+                parseBlip(file, line);
+            } else if (token == "VAR") {
+                parseVariable(file, line);
+            }
+        }
+    } catch (const std::exception& e) {
+        std::cerr << "Error while parsing file: " << e.what() << std::endl;
+        file.close(); // Ensure the file is closed if an error occurs
+        return;
     }
+
+    file.close(); // Close the file after processing
 }

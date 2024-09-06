@@ -31,8 +31,8 @@ struct Exit {
     std::pair<int, int> startPosition; // (x, y)
     int destinationRoomId;
     std::pair<int, int> destinationPosition; // (x, y) in the destination room
-    std::string effect;
-    int dialogueId;
+    std::string effect = "none";
+    int dialogueId = -1;
 };
 
 struct End {
@@ -61,29 +61,30 @@ struct Tile {
 
 // Avatar structure
 struct Avatar {
-    char id = 'A';
-    std::vector<std::string> frames;
-    std::pair<int, std::pair<int, int>> position;
-    std::vector<int> inventory;
+    char id = 'A';                        // Avatar ID is always 'A'
+    std::vector<std::string> frames;      // Frames for the avatar's animation
+    int roomId;                           // Room ID where the avatar is located
+    std::pair<int, int> position;         // (x, y) position within the room
+    std::vector<int> inventory;           // List of items in the avatar's inventory
 };
 
-// Sprite structure
 struct Sprite {
-    char id;
-    std::vector<std::string> frames;
-    std::string name;
-    std::pair<int, std::pair<int, int>> position;
-    int dialogId;
-    int blipId;
+    char id;                              // Sprite ID
+    std::vector<std::string> frames;      // Frames for the sprite's animation
+    int roomId;                           // Room ID where the sprite is located
+    std::pair<int, int> position;         // (x, y) position within the room
+    int dialogId = -1;                    // Dialogue ID (-1 if no dialogue)
+    int blipId = -1;                      // Blip sound ID (-1 if no blip)
+    std::string name;                     // Sprite name
 };
 
 // Item structure
 struct Item {
-    int id;
-    std::vector<std::string> frames;
-    std::string name;
-    int dialogId;
-    int blipId;
+    int id;                              // Item ID
+    std::vector<std::string> frames;     // Frames for the item's animation
+    std::string name;                    // Item name
+    int dialogId = -1;                   // Dialogue ID (-1 if no dialogue)
+    int blipId = -1;                     // Blip sound ID (-1 if no blip)
 };
 
 // Dialogue structure
@@ -95,30 +96,32 @@ struct Dialogue {
 
 // Tune structure
 struct Tune {
-    int id;
-    std::vector<std::string> patterns;
-    std::string name;
-    std::string key;
-    std::string tempo;
-    std::string square;
-    std::string arpeggio;
+    int id;                              // Tune ID
+    std::vector<std::string> treblePatterns; // Treble patterns (melody)
+    std::vector<std::string> bassPatterns;   // Bass patterns (harmony)
+    std::string name;                    // Tune name
+    std::string key;                     // Musical key
+    std::string tempo;                   // Tempo
+    std::string trebleInstrument;        // Instrument for treble (P2, P4, P8)
+    std::string bassInstrument;          // Instrument for bass (P2, P4, P8)
+    std::string arpeggio;                // Arpeggio settings
 };
 
 // Blip structure
 struct Blip {
-    int id;
-    std::string notes;
-    std::string name;
-    std::vector<int> envelope;
-    std::vector<int> beat;
-    std::string square;
-    int repeat;
+    int id;                    // Blip ID
+    std::string notes;         // Musical notes
+    std::string name;          // Blip name
+    std::vector<int> env;      // Envelope values
+    std::vector<int> beat;     // Beat values
+    std::string squareWave;    // Square wave setting (P2, P4, etc.)
+    int repeat = 0;            // Repeat value
 };
 
 // Variable structure
 struct Variable {
     std::string name;
-    int value;
+    std::string value;
 };
 
 // BitsyGame class
