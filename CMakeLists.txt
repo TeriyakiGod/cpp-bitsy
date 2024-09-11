@@ -20,4 +20,4 @@ file(GLOB TESTS "tests/*.cpp")
 add_executable(BitsyGame ${SOURCES})
 
 # Add the executable target for the tests
-add_executable(BitsyGameTests ${TESTS} src/BitsyGameParser.cpp)
+add_executable(BitsyGameTests ${TESTS} src/BitsyGameParser.cpp src/BitsyGame.cpp)

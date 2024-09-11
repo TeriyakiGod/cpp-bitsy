@@ -74,25 +74,12 @@ void test_parse_game_data() {
     assert(game.blips[1].name == "pick up key");
 
     std::cout << "test_parse_game_data passed!" << std::endl;
+
+    // Test the printGameStats method
+    game.printGameStats();
 }
 
 int main() {
-    // test_parse_game_title();
-    // test_parse_settings();
-    // test_parse_palette();
-    // test_parse_room();
-    // test_parse_tile_single_frame();
-    // test_parse_tile_two_frames();
-    // test_parse_avatar_single_frame();
-    // test_parse_avatar_two_frames();
-    // test_parse_sprite_single_frame();
-    // test_parse_sprite_with_dialog_and_blip();
-    // test_parse_dialogue();
-    // test_parse_item_with_dialog_and_blip();
-    // test_parse_item_with_two_frames();
-    // test_parse_variable();
-    // test_parse_tune_with_treble_and_bass();
-    // test_parse_blip();
     test_parse_game_data();
 
     std::cout << "All tests passed!" << std::endl;

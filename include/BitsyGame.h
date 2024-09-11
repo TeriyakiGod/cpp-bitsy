@@ -104,13 +104,16 @@ struct Blip {
     std::string name;  // Blip name (optional)
 };
 
-// Main class that holds the game data
+struct Settings {
+        int verMaj, verMin, roomFormat, dlgCompat, txtMode;  // Game settings
+    };
+
+// BitsyGame
 class BitsyGame {
 public:
+    void printGameStats() const;  // Print game statistics
     std::string title;  // Game title
-    struct {
-        int verMaj, verMin, roomFormat, dlgCompat, txtMode;  // Game settings
-    } settings;
+    Settings settings;  // Game settings
     std::vector<Palette> palettes;  // Palettes in the game
     std::vector<Room> rooms;  // Rooms in the game
     std::vector<Tile> tiles;  // Tiles in the game
