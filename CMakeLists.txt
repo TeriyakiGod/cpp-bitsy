@@ -13,8 +13,11 @@ include_directories(include)
 # Add all source files from the src directory
 file(GLOB SOURCES "src/*.cpp")
 
+# add test files
+file(GLOB TESTS "tests/*.cpp")
+
 # Add the executable target for the main application
 add_executable(BitsyGame ${SOURCES})
 
 # Add the executable target for the tests
-add_executable(BitsyGameTests tests/test_bitsy_game.cpp src/BitsyGame.cpp)
+add_executable(BitsyGameTests ${TESTS} src/BitsyGameParser.cpp)
