@@ -1,4 +1,4 @@
-#include "BitsyGameParser.h"
+#include <BitsyGameParser.h>
 #include <fstream>
 #include <sstream>
 
@@ -26,19 +26,19 @@ std::vector<std::string> readFrames(std::istream& file) {
     return frames;
 }
 
-BitsyGame BitsyGameParser::parseGameData(const std::string& filePath) {
-    BitsyGame game;
+BitsyGameData BitsyGameParser::parseGameData(const std::string& filePath) {
+    BitsyGameData gameData;
     std::ifstream file(filePath);
 
     if (!file.is_open()) {
         std::cerr << "Error: Unable to open file " << filePath << std::endl;
-        return game;
+        return gameData;
     }
 
     std::string line;
     try {
         if (std::getline(file, line)) {
-            parseGameTitle(game, line);
+            parseGameTitle(gameData, line);
         }
 
         while (std::getline(file, line)) {
@@ -47,27 +47,27 @@ BitsyGame BitsyGameParser::parseGameData(const std::string& filePath) {
             ss >> token;
 
             if (token == "!") {
-                parseSettings(game, line);
+                parseSettings(gameData, line);
             } else if (token == "PAL") {
-                parsePalette(game, file, line);
+                parsePalette(gameData, file, line);
             } else if (token == "ROOM") {
-                parseRoom(game, file, line);
+                parseRoom(gameData, file, line);
             } else if (token == "TIL") {
-                parseTile(game, file, line);
+                parseTile(gameData, file, line);
             } else if (token == "SPR" && line.find("A") != std::string::npos) {
-                parseAvatar(game, file, line);
+                parseAvatar(gameData, file, line);
             } else if (token == "SPR") {
-                parseSprite(game, file, line);
+                parseSprite(gameData, file, line);
             } else if (token == "ITM") {
-                parseItem(game, file, line);
+                parseItem(gameData, file, line);
             } else if (token == "DLG") {
-                parseDialogue(game, file, line);
+                parseDialogue(gameData, file, line);
             } else if (token == "TUNE") {
-                parseTune(game, file, line);
+                parseTune(gameData, file, line);
             } else if (token == "BLIP") {
-                parseBlip(game, file, line);
+                parseBlip(gameData, file, line);
             } else if (token == "VAR") {
-                parseVariable(game, file, line);
+                parseVariable(gameData, file, line);
             }
         }
     } catch (const std::exception& e) {
@@ -75,27 +75,27 @@ BitsyGame BitsyGameParser::parseGameData(const std::string& filePath) {
     }
 
     file.close();
-    return game;
+    return gameData;
 }
 
-void BitsyGameParser::parseGameTitle(BitsyGame& game, const std::string& line) {
-    game.title = line;
+void BitsyGameParser::parseGameTitle(BitsyGameData& gameData, const std::string& line) {
+    gameData.title = line;
 }
 
-void BitsyGameParser::parseSettings(BitsyGame& game, const std::string& line) {
+void BitsyGameParser::parseSettings(BitsyGameData& gameData, const std::string& line) {
     std::stringstream ss(line);
     std::string key;
     int value;
     ss >> key >> key >> value;
 
-    if (key == "VER_MAJ") game.settings.verMaj = value;
-    else if (key == "VER_MIN") game.settings.verMin = value;
-    else if (key == "ROOM_FORMAT") game.settings.roomFormat = value;
-    else if (key == "DLG_COMPAT") game.settings.dlgCompat = value;
-    else if (key == "TXT_MODE") game.settings.txtMode = value;
+    if (key == "VER_MAJ") gameData.settings.verMaj = value;
+    else if (key == "VER_MIN") gameData.settings.verMin = value;
+    else if (key == "ROOM_FORMAT") gameData.settings.roomFormat = value;
+    else if (key == "DLG_COMPAT") gameData.settings.dlgCompat = value;
+    else if (key == "TXT_MODE") gameData.settings.txtMode = value;
 }
 
-void BitsyGameParser::parsePalette(BitsyGame& game, std::istream& file, const std::string& firstLine) {
+void BitsyGameParser::parsePalette(BitsyGameData& gameData, std::istream& file, const std::string& firstLine) {
     Palette palette;
     palette.id = std::stoi(firstLine.substr(4));  // Extract palette ID
 
@@ -115,10 +115,10 @@ void BitsyGameParser::parsePalette(BitsyGame& game, std::istream& file, const st
         palette.name = nameLine.substr(5);
     }
 
-    game.palettes.push_back(palette);
+    gameData.palettes.push_back(palette);
 }
 
-void BitsyGameParser::parseRoom(BitsyGame& game, std::istream& file, const std::string& firstLine) {
+void BitsyGameParser::parseRoom(BitsyGameData& gameData, std::istream& file, const std::string& firstLine) {
     Room room;
     room.id = std::stoi(firstLine.substr(5));  // Extract room ID
 
@@ -162,10 +162,10 @@ void BitsyGameParser::parseRoom(BitsyGame& game, std::istream& file, const std::
         }
     }
 
-    game.rooms.push_back(room);
+    gameData.rooms.push_back(room);
 }
 
-void BitsyGameParser::parseTile(BitsyGame& game, std::istream& file, const std::string& firstLine) {
+void BitsyGameParser::parseTile(BitsyGameData& gameData, std::istream& file, const std::string& firstLine) {
     Tile tile;
     tile.id = firstLine[4];
     tile.frames = readFrames(file);  // Read frames
@@ -179,10 +179,10 @@ void BitsyGameParser::parseTile(BitsyGame& game, std::istream& file, const std::
     std::getline(file, line);
     tile.wall = (line.find("WAL") != std::string::npos);
 
-    game.tiles.push_back(tile);
+    gameData.tiles.push_back(tile);
 }
 
-void BitsyGameParser::parseAvatar(BitsyGame& game, std::istream& file, const std::string& firstLine) {
+void BitsyGameParser::parseAvatar(BitsyGameData& gameData, std::istream& file, const std::string& firstLine) {
     Avatar avatar;
     avatar.id = 'A';  // Avatar always has the ID 'A'
     avatar.frames = readFrames(file);  // Read frames
@@ -199,10 +199,10 @@ void BitsyGameParser::parseAvatar(BitsyGame& game, std::istream& file, const std
         }
     }
 
-    game.avatar = avatar;
+    gameData.avatar = avatar;
 }
 
-void BitsyGameParser::parseSprite(BitsyGame& game, std::istream& file, const std::string& firstLine) {
+void BitsyGameParser::parseSprite(BitsyGameData& gameData, std::istream& file, const std::string& firstLine) {
     Sprite sprite;
     sprite.id = firstLine[4];
     sprite.frames = readFrames(file);  // Read frames
@@ -220,10 +220,10 @@ void BitsyGameParser::parseSprite(BitsyGame& game, std::istream& file, const std
         }
     }
 
-    game.sprites.push_back(sprite);
+    gameData.sprites.push_back(sprite);
 }
 
-void BitsyGameParser::parseItem(BitsyGame& game, std::istream& file, const std::string& firstLine) {
+void BitsyGameParser::parseItem(BitsyGameData& gameData, std::istream& file, const std::string& firstLine) {
     Item item;
     item.id = std::stoi(firstLine.substr(4));
     item.frames = readFrames(file);  // Read frames
@@ -239,10 +239,10 @@ void BitsyGameParser::parseItem(BitsyGame& game, std::istream& file, const std::
         }
     }
 
-    game.items.push_back(item);
+    gameData.items.push_back(item);
 }
 
-void BitsyGameParser::parseDialogue(BitsyGame& game, std::istream& file, const std::string& firstLine) {
+void BitsyGameParser::parseDialogue(BitsyGameData& gameData, std::istream& file, const std::string& firstLine) {
     Dialogue dlg;
     dlg.id = std::stoi(firstLine.substr(4));
     std::getline(file, dlg.text);
@@ -253,10 +253,10 @@ void BitsyGameParser::parseDialogue(BitsyGame& game, std::istream& file, const s
         dlg.name = line.substr(5);  // Extract dialogue name
     }
 
-    game.dialogues.push_back(dlg);
+    gameData.dialogues.push_back(dlg);
 }
 
-void BitsyGameParser::parseVariable(BitsyGame& game, std::istream& file, const std::string& firstLine) {
+void BitsyGameParser::parseVariable(BitsyGameData& gameData, std::istream& file, const std::string& firstLine) {
     Variable var;
     var.name = firstLine.substr(4);  // Extract variable name
 
@@ -264,10 +264,10 @@ void BitsyGameParser::parseVariable(BitsyGame& game, std::istream& file, const s
     std::getline(file, line);
     var.value = line;  // Assign the value to the variable
 
-    game.variables[var.name] = var;
+    gameData.variables[var.name] = var;
 }
 
-void BitsyGameParser::parseTune(BitsyGame& game, std::istream& file, const std::string& firstLine) {
+void BitsyGameParser::parseTune(BitsyGameData& gameData, std::istream& file, const std::string& firstLine) {
     Tune tune;
     tune.id = std::stoi(firstLine.substr(5));  // Extract tune ID
 
@@ -297,10 +297,10 @@ void BitsyGameParser::parseTune(BitsyGame& game, std::istream& file, const std::
         }
     }
 
-    game.tunes.push_back(tune);
+    gameData.tunes.push_back(tune);
 }
 
-void BitsyGameParser::parseBlip(BitsyGame& game, std::istream& file, const std::string& firstLine) {
+void BitsyGameParser::parseBlip(BitsyGameData& gameData, std::istream& file, const std::string& firstLine) {
     Blip blip;
     blip.id = std::stoi(firstLine.substr(5));  // Extract blip ID
 
@@ -329,5 +329,5 @@ void BitsyGameParser::parseBlip(BitsyGame& game, std::istream& file, const std::
         }
     }
 
-    game.blips.push_back(blip);
+    gameData.blips.push_back(blip);
 }

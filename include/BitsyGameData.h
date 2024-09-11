@@ -108,8 +108,8 @@ struct Settings {
         int verMaj, verMin, roomFormat, dlgCompat, txtMode;  // Game settings
     };
 
-// BitsyGame
-class BitsyGame {
+// BitsyGameData
+class BitsyGameData {
 public:
     void printGameStats() const;  // Print game statistics
     std::string title;  // Game title

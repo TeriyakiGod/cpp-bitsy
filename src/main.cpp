@@ -1,10 +1,10 @@
 // main.cpp
-#include "BitsyGame.h"
+#include "BitsyGameData.h"
 #include "BitsyGameParser.h"
 #include <iostream>
 
 int main() {
-    BitsyGame game;
+    BitsyGameData game;
     game = BitsyGameParser::parseGameData("../game.bitsy");
     
     std::cout << "Game Title: " << game.title << std::endl;

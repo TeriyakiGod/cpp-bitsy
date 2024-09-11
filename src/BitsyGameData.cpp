@@ -1,7 +1,7 @@
-#include "BitsyGame.h"
+#include <BitsyGameData.h>
 #include <iostream>
 
-void BitsyGame::printGameStats() const {
+void BitsyGameData::printGameStats() const {
     std::cout << "Game Title: " << title << std::endl;
     std::cout << "Version: " << settings.verMaj << "." << settings.verMin << std::endl;
     std::cout << "Number of Palettes: " << palettes.size() << std::endl;
